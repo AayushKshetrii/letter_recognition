@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Handwriting Board</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f5f3;
+      color: #1a1a1a;
+    }
+
+    /* Canvas spanning full viewport */
+    #board {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: block;
+      cursor: crosshair;
+      touch-action: none;
+      background: #fff;
+      z-index: 1;
+    }
+
+    /* Overlay Toolbar */
+    .floating-toolbar {
+      position: absolute;
+      top: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      border-radius: 12px;
+      border: 0.5px solid #e0e0d8;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      padding: 0.75rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-width: 90vw;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .controls button {
+      padding: 6px 14px;
+      font-size: 13px;
+      border: 0.5px solid #d0d0c8;
+      background: #fff;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #1a1a1a;
+      transition: background 0.1s;
+    }
+    .controls button:hover { background: #f5f5f3; }
+    .controls button:active { transform: scale(0.97); }
+
+    #status {
+      margin-left: auto;
+      font-size: 12px;
+      color: #888;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #status-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #ccc;
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+    #status-dot.ready  { background: #1D9E75; }
+    #status-dot.busy   { background: #EF9F27; }
+    #status-dot.error  { background: #E24B4A; }
+
+    .conf-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-top: 0.5px solid #e8e8e0;
+      padding-top: 6px;
+      font-size: 13px;
+      color: #555;
+      min-height: 24px;
+    }
+    .conf-bar-wrap {
+      flex: 1; height: 6px;
+      border-radius: 3px;
+      background: #eee;
+      overflow: hidden;
+    }
+    .conf-bar {
+      height: 100%; border-radius: 3px;
+      background: #378ADD;
+      width: 0%;
+      transition: width 0.25s ease;
+    }
+
+    kbd {
+      display: inline-block;
+      font-size: 11px;
+      background: #f0f0ec;
+      border: 0.5px solid #d0d0c8;
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-family: inherit;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="board"></canvas>
+
+<div class="floating-toolbar">
+  <div class="controls">
+    <button id="btn-space">Space</button>
+    <button id="btn-back">Backspace</button>
+    <button id="btn-clear">Clear Board</button>
+    <span id="status"><span id="status-dot"></span><span id="status-label">Connecting…</span></span>
+  </div>
+
+  <div class="conf-row">
+    <span id="last-char" style="font-size:18px;font-weight:500;min-width:18px;"></span>
+    <div class="conf-bar-wrap"><div class="conf-bar" id="conf-bar"></div></div>
+    <span id="conf-label" style="min-width:38px;text-align:right;"></span>
+    <span style="color:#bbb;font-size:12px;">
+      <kbd>Space</kbd> <kbd>Backspace</kbd>
+    </span>
+  </div>
+</div>
+
+<script>
+(function () {
+  const API = '/predict';
+  const DELAY = 600;
+  const FS = 30, CW = 19;
+
+  const canvas = document.getElementById('board');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+
+  function resize() {
+    canvas.width = window.innerWidth * dpr;
+    canvas.height = window.innerHeight * dpr;
+    ctx.scale(dpr, dpr);
+    render();
+  }
+  window.addEventListener('resize', resize);
+
+  // Array of text elements placed across the screen: { text, x, y }
+  let placedTexts = [];
+  let currentPos = null; // Stores { x, y } where current writing originated
+
+  let strokes = [], cur = null, drawing = false, timer = null;
+
+  function W() { return window.innerWidth; }
+  function H() { return window.innerHeight; }
+
+  function setStatus(state, text) {
+    document.getElementById('status-dot').className = state;
+    document.getElementById('status-label').textContent = text;
+  }
+
+  function render() {
+    const w = W(), h = H();
+    ctx.clearRect(0, 0, w, h);
+
+    // Render all confirmed text at their relative positions
+    ctx.font = `${FS}px "Courier New", monospace`;
+    ctx.fillStyle = '#1a1a1a';
+    ctx.textBaseline = 'top';
+    placedTexts.forEach(item => {
+      ctx.fillText(item.text, item.x, item.y);
+    });
+
+    // Render strokes currently being drawn
+    if (strokes.length || cur) {
+      drawStrokes();
+    }
+  }
+
+  function drawStrokes() {
+    const all = [...strokes, ...(cur ? [cur] : [])];
+    ctx.strokeStyle = '#2563EB';
+    ctx.lineJoin = 'round'; 
+    ctx.lineCap = 'round'; 
+    ctx.lineWidth = 3;
+
+    all.forEach(s => {
+      if (s.length < 2) return;
+      ctx.beginPath();
+      ctx.moveTo(s[0].x, s[0].y);
+      for (let i = 1; i < s.length; i++) {
+        ctx.lineTo(s[i].x, s[i].y);
+      }
+      ctx.stroke();
+    });
+  }
+
+  function getXY(e) {
+    const r = canvas.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
+
+  canvas.addEventListener('pointerdown', e => {
+    e.preventDefault(); 
+    canvas.setPointerCapture(e.pointerId);
+    if (timer) { clearTimeout(timer); timer = null; }
+    
+    const pt = getXY(e);
+    // Track cursor location on first stroke of a session
+    if (!strokes.length) {
+      currentPos = { x: pt.x, y: pt.y };
+    }
+    
+    drawing = true; 
+    cur = [pt];
+    setStatus('busy', 'Drawing…'); 
+    render();
+  });
+
+  canvas.addEventListener('pointermove', e => {
+    if (!drawing) return; 
+    cur.push(getXY(e)); 
+    render();
+  });
+
+  canvas.addEventListener('pointerup', e => {
+    if (!drawing) return; 
+    drawing = false;
+    if (cur?.length) strokes.push(cur);
+    cur = null; 
+    render();
+    setStatus('busy', 'Waiting…');
+    timer = setTimeout(runInfer, DELAY);
+  });
+
+  canvas.addEventListener('pointercancel', e => {
+    if (drawing) { 
+      drawing = false; 
+      if (cur?.length) strokes.push(cur); 
+      cur = null; 
+      render(); 
+    }
+  });
+
+  function rasterize28() {
+    const off = document.createElement('canvas');
+    off.width = 28; off.height = 28;
+    const oc = off.getContext('2d');
+    oc.fillStyle = '#000'; oc.fillRect(0, 0, 28, 28);
+    if (!strokes.length) return off;
+    
+    const pts = strokes.flat();
+    const mnX = Math.min(...pts.map(p => p.x));
+    const mxX = Math.max(...pts.map(p => p.x));
+    const mnY = Math.min(...pts.map(p => p.y));
+    const mxY = Math.max(...pts.map(p => p.y));
+    const sw = Math.max(mxX - mnX, 1), sh = Math.max(mxY - mnY, 1), pad = 2;
+    const scale = (28 - pad * 2) / Math.max(sw, sh);
+    const ox = pad + (28 - pad * 2 - sw * scale) / 2;
+    const oy = pad + (28 - pad * 2 - sh * scale) / 2;
+    
+    oc.strokeStyle = '#fff'; oc.lineJoin = 'round'; oc.lineCap = 'round';
+    oc.lineWidth = Math.max(1.5, 28 * 0.09);
+    strokes.forEach(s => {
+      if (s.length < 2) return;
+      oc.beginPath();
+      oc.moveTo(ox + (s[0].x - mnX) * scale, oy + (s[0].y - mnY) * scale);
+      for (let i = 1; i < s.length; i++)
+        oc.lineTo(ox + (s[i].x - mnX) * scale, oy + (s[i].y - mnY) * scale);
+      oc.stroke();
+    });
+
+    // NOTE: orientation correction (rotate/flip) intentionally lives ONLY on the
+    // backend now (see main.py). Do not re-add a transform here — having it in
+    // two places caused the compounding-transform bug from Phase 1.
+    return off;
+  }
+
+  async function runInfer() {
+    if (!strokes.length) return;
+    setStatus('busy', 'Recognising…');
+    const img28 = rasterize28();
+    const b64 = img28.toDataURL('image/png');
+
+    try {
+      const res = await fetch(API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: b64 }),
+      });
+      if (!res.ok) throw new Error(`Server ${res.status}`);
+      const data = await res.json();
+
+      document.getElementById('last-char').textContent = data.character;
+      document.getElementById('conf-bar').style.width = data.confidence + '%';
+      document.getElementById('conf-label').textContent = data.confidence.toFixed(1) + '%';
+
+      addChar(data.character);
+      strokes = []; cur = null;
+      setStatus('ready', `Got "${data.character}" — draw anywhere`);
+    } catch (err) {
+      setStatus('error', 'Server error — check backend');
+      strokes = []; cur = null;
+    }
+    render();
+  }
+
+  function addChar(ch) {
+    if (!currentPos) return;
+
+    // Append to existing text block if typing in sequence, else create a new text entry at cursor position
+    const lastItem = placedTexts[placedTexts.length - 1];
+    if (lastItem && Math.abs(lastItem.y - currentPos.y) < FS) {
+      lastItem.text += ch;
+      // Advance cursor horizontal position for following characters
+      currentPos.x += CW;
+    } else {
+      placedTexts.push({ text: ch, x: currentPos.x, y: currentPos.y });
+      currentPos.x += CW;
+    }
+  }
+
+  function backspace() {
+    if (strokes.length || cur) { strokes = []; cur = null; render(); return; }
+    if (placedTexts.length) {
+      const lastItem = placedTexts[placedTexts.length - 1];
+      lastItem.text = lastItem.text.slice(0, -1);
+      if (lastItem.text.length === 0) {
+        placedTexts.pop();
+      }
+    }
+    render();
+  }
+
+  function addSpace() { 
+    if (placedTexts.length && currentPos) {
+      addChar(' '); 
+    }
+    render(); 
+  }
+
+  function clearAll() {
+    if (timer) { clearTimeout(timer); timer = null; }
+    placedTexts = [];
+    strokes = []; 
+    cur = null;
+    currentPos = null;
+    document.getElementById('last-char').textContent = '';
+    document.getElementById('conf-bar').style.width = '0%';
+    document.getElementById('conf-label').textContent = '';
+    setStatus('ready', 'Draw anywhere on the board');
+    render();
+  }
+
+  document.getElementById('btn-space').onclick = addSpace;
+  document.getElementById('btn-back').onclick = backspace;
+  document.getElementById('btn-clear').onclick = clearAll;
+
+  document.addEventListener('keydown', e => {
+    if (e.key === ' ') { e.preventDefault(); addSpace(); }
+    else if (e.key === 'Backspace') { e.preventDefault(); backspace(); }
+  });
+
+  // Check backend health on startup
+  fetch('/health')
+    .then(r => r.json())
+    .then(() => { setStatus('ready', 'Draw anywhere on the board'); resize(); })
+    .catch(() => setStatus('error', 'Backend not reachable'));
+
+  resize();
+})();
+</script>
+</body>
+</html>
