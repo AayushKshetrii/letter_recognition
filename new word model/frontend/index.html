@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Handwriting Docs — In-Place Live Recognition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Top Navigation Header -->
+    <header class="app-header">
+        <div class="header-left">
+            <div class="docs-icon" title="Handwriting Docs">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                </svg>
+            </div>
+            <div class="title-container">
+                <input type="text" id="docTitle" class="doc-title-input" value="Untitled Document" spellcheck="false">
+                <div class="menu-bar">
+                    <span class="menu-item" id="btnExportTxt">File</span>
+                    <span class="menu-item" id="btnEditMenu">Edit</span>
+                    <span class="menu-item" id="btnSampleInsert">Insert Sample</span>
+                    <span class="save-status" id="saveStatus">Saved</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="header-center">
+            <!-- Mode Selector / Realtime Recognition Status -->
+            <div class="status-pill" id="aiStatusPill">
+                <span class="pulse-dot"></span>
+                <span id="aiStatusText">Live In-Place Recognition Ready</span>
+            </div>
+        </div>
+
+        <div class="header-right">
+            <div class="latency-badge" id="latencyBadge" title="Inference Latency">
+                ⚡ <span id="latencyValue">--</span> ms
+            </div>
+            <button class="action-btn share-btn" id="btnCopyAll" title="Copy Document Text">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                Copy Text
+            </button>
+        </div>
+    </header>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="toolbar-group">
+            <button class="tool-btn" id="btnDocUndo" title="Undo (Ctrl+Z)">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/></svg>
+            </button>
+            <button class="tool-btn" id="btnDocRedo" title="Redo (Ctrl+Y)">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.4 10.6C16.55 8.99 14.15 8 11.5 8c-4.65 0-8.58 3.03-9.96 7.22L3.9 16c1.05-3.19 4.05-5.5 7.6-5.5 1.95 0 3.73.72 5.12 1.88L13 16h9V7l-3.6 3.6z"/></svg>
+            </button>
+            <button class="tool-btn" id="btnPrint" title="Print Document">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg>
+            </button>
+        </div>
+
+        <div class="toolbar-separator"></div>
+
+        <div class="toolbar-group">
+            <select id="formatBlock" class="tool-select" title="Styles">
+                <option value="p">Normal text</option>
+                <option value="h1">Heading 1</option>
+                <option value="h2">Heading 2</option>
+                <option value="h3">Heading 3</option>
+            </select>
+        </div>
+
+        <div class="toolbar-separator"></div>
+
+        <div class="toolbar-group">
+            <button class="tool-btn" id="btnBold" title="Bold (Ctrl+B)"><strong>B</strong></button>
+            <button class="tool-btn" id="btnItalic" title="Italic (Ctrl+I)"><em>I</em></button>
+            <button class="tool-btn" id="btnUnderline" title="Underline (Ctrl+U)"><u>U</u></button>
+        </div>
+
+        <div class="toolbar-separator"></div>
+
+        <!-- Handwriting Controls in Toolbar -->
+        <div class="toolbar-group pen-controls">
+            <div class="mode-toggle-group">
+                <button class="mode-btn active" id="btnHandwritingMode" title="Enable Handwriting Ink Layer">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                        <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                    </svg>
+                    <span>Handwriting Active</span>
+                </button>
+            </div>
+
+            <div class="ink-color-picker" title="Ink Color">
+                <span class="color-dot active" data-color="#1e293b" style="background:#1e293b"></span>
+                <span class="color-dot" data-color="#1a73e8" style="background:#1a73e8"></span>
+                <span class="color-dot" data-color="#d93025" style="background:#d93025"></span>
+            </div>
+
+            <button class="tool-btn-text" id="btnClearInk" title="Clear current ink without recognizing">
+                Clear Ink
+            </button>
+            
+            <button class="tool-btn-text accent-btn" id="btnRecognizeNow" title="Force recognize currently drawn strokes">
+                ⚡ Convert Now
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Document Canvas & Writing Stage -->
+    <main class="document-viewport">
+        <!-- Page container styled like Google Docs A4 sheet -->
+        <div class="page-container" id="pageContainer">
+            
+            <!-- Document text content layer -->
+            <div 
+                id="docEditor" 
+                class="doc-editor" 
+                contenteditable="true" 
+                spellcheck="true" 
+                placeholder="Start typing or write anywhere with your pen/stylus/mouse..."
+            ><p>Welcome to <strong>Handwriting Docs</strong>!</p><p>Write handwritten strokes directly over this document page using your stylus, touchscreen, or mouse. The AI model will recognize your writing and <em>substitute it in-place in real-time</em>.</p><p><br></p></div>
+
+            <!-- In-Place Handwriting Overlay Canvas -->
+            <canvas id="inkCanvas" class="ink-canvas"></canvas>
+
+            <!-- Floating Target Indicator showing active insertion location -->
+            <div id="insertionIndicator" class="insertion-indicator">
+                <span class="indicator-tag">✍️ Write here to insert text</span>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bottom Status Bar -->
+    <footer class="footer-bar">
+        <div class="footer-left">
+            <span id="docStats">Words: 0 | Characters: 0</span>
+        </div>
+        <div class="footer-center">
+            <span class="hint-text">💡 <strong>In-Place Substitution:</strong> Write cursive or print text. It converts automatically ~500ms after you pause!</span>
+        </div>
+        <div class="footer-right">
+            <span class="model-tag">BiLSTM-CTC • IAM-OnDB</span>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

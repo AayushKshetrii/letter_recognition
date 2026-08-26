@@ -1,0 +1,506 @@
+/* Google Docs Style Sheet with Live In-Place Handwriting Substitution */
+
+:root {
+    --gdocs-bg: #f8fafd;
+    --gdocs-header: #ffffff;
+    --gdocs-border: #e0e6ed;
+    --gdocs-toolbar-btn: #444746;
+    --gdocs-hover: #e8eaed;
+    --gdocs-active: #c2e7ff;
+    --gdocs-text: #1f1f1f;
+    --gdocs-blue: #1a73e8;
+    --gdocs-blue-hover: #1557b0;
+    --gdocs-shadow: rgba(60, 64, 67, 0.15) 0px 1px 3px 1px;
+    --gdocs-page-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Roboto', 'Google Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--gdocs-bg);
+    color: var(--gdocs-text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+}
+
+/* ─── Header ────────────────────────────────────────────────────────── */
+.app-header {
+    background: var(--gdocs-header);
+    border-bottom: 1px solid var(--gdocs-border);
+    padding: 10px 18px 8px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.docs-icon {
+    width: 38px;
+    height: 38px;
+    color: var(--gdocs-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.docs-icon svg {
+    width: 32px;
+    height: 32px;
+}
+
+.title-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.doc-title-input {
+    font-family: 'Google Sans', sans-serif;
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--gdocs-text);
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 2px 6px;
+    background: transparent;
+    outline: none;
+    transition: border 0.15s ease;
+    width: 220px;
+}
+
+.doc-title-input:hover {
+    border-color: #dadce0;
+}
+
+.doc-title-input:focus {
+    border-color: var(--gdocs-blue);
+    background: #fff;
+}
+
+.menu-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    color: #444746;
+    margin-top: 1px;
+    padding-left: 6px;
+}
+
+.menu-item {
+    cursor: pointer;
+    border-radius: 4px;
+    padding: 2px 4px;
+    transition: background 0.1s ease;
+}
+
+.menu-item:hover {
+    background: var(--gdocs-hover);
+}
+
+.save-status {
+    font-size: 12px;
+    color: #727775;
+    margin-left: 4px;
+}
+
+.header-center {
+    display: flex;
+    align-items: center;
+}
+
+.status-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: #eaf1fb;
+    border: 1px solid #d3e3fd;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #0b57d0;
+    transition: all 0.2s ease;
+}
+
+.status-pill.recognizing {
+    background: #fef7e0;
+    border-color: #feefc3;
+    color: #b06000;
+}
+
+.status-pill.success {
+    background: #e6f4ea;
+    border-color: #ceead6;
+    color: #137333;
+}
+
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--gdocs-blue);
+}
+
+.status-pill.recognizing .pulse-dot {
+    background: #f29900;
+    animation: pulse 0.8s infinite alternate;
+}
+
+.status-pill.success .pulse-dot {
+    background: #1e8e3e;
+}
+
+@keyframes pulse {
+    0% { transform: scale(0.8); opacity: 0.5; }
+    100% { transform: scale(1.3); opacity: 1; }
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.latency-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: #f1f3f4;
+    padding: 4px 8px;
+    border-radius: 4px;
+    color: #5f6368;
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s ease;
+}
+
+.share-btn {
+    background: #c2e7ff;
+    color: #001d35;
+}
+
+.share-btn:hover {
+    background: #b3d7f5;
+}
+
+/* ─── Toolbar ────────────────────────────────────────────────────────── */
+.toolbar {
+    background: #edf2fa;
+    border-bottom: 1px solid #e0e6ed;
+    padding: 6px 18px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    z-index: 90;
+}
+
+.toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.toolbar-separator {
+    width: 1px;
+    height: 20px;
+    background: #dadce0;
+    margin: 0 4px;
+}
+
+.tool-btn {
+    background: transparent;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gdocs-toolbar-btn);
+    cursor: pointer;
+    transition: background 0.1s ease;
+}
+
+.tool-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+.tool-btn:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+.tool-btn.active {
+    background: var(--gdocs-active);
+    color: #041e49;
+}
+
+.tool-select {
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    background: transparent;
+    font-size: 13px;
+    color: var(--gdocs-toolbar-btn);
+    cursor: pointer;
+}
+
+.tool-select:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+/* Handwriting toolbar styling */
+.pen-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 6px;
+}
+
+.mode-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 16px;
+    border: 1px solid #d3e3fd;
+    background: #ffffff;
+    font-size: 12px;
+    font-weight: 500;
+    color: #0b57d0;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.mode-btn.active {
+    background: #0b57d0;
+    color: #ffffff;
+    border-color: #0b57d0;
+}
+
+.ink-color-picker {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.color-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.1s ease;
+}
+
+.color-dot.active {
+    border-color: #ffffff;
+    box-shadow: 0 0 0 1.5px var(--gdocs-blue);
+    transform: scale(1.15);
+}
+
+.tool-btn-text {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    background: transparent;
+    border: 1px solid #dadce0;
+    color: #444746;
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.tool-btn-text:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.tool-btn-text.accent-btn {
+    background: #0b57d0;
+    color: white;
+    border-color: #0b57d0;
+}
+
+.tool-btn-text.accent-btn:hover {
+    background: #0842a0;
+}
+
+/* ─── Document Viewport & Page Container ────────────────────────────── */
+.document-viewport {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    justify-content: center;
+    padding: 24px 16px 80px 16px;
+    position: relative;
+}
+
+/* Styled like an authentic Google Docs A4 Sheet */
+.page-container {
+    position: relative;
+    width: 100%;
+    max-width: 816px; /* Standard A4 proportion at 96 DPI */
+    min-height: 1056px;
+    background: #ffffff;
+    box-shadow: var(--gdocs-page-shadow);
+    border-radius: 4px;
+    padding: 72px 72px 96px 72px;
+    cursor: text;
+}
+
+/* Document Text Layer */
+.doc-editor {
+    position: relative;
+    z-index: 10;
+    min-height: 850px;
+    outline: none;
+    font-size: 15px;
+    line-height: 1.7;
+    color: #1f1f1f;
+    word-break: break-word;
+}
+
+.doc-editor p {
+    margin-bottom: 12px;
+}
+
+.doc-editor h1 {
+    font-size: 26px;
+    font-weight: 600;
+    margin-bottom: 14px;
+    color: #1a73e8;
+}
+
+.doc-editor h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.doc-editor h3 {
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+/* In-Place Substitution Glow Animation */
+.substituted-text-glow {
+    display: inline;
+    background: linear-gradient(120deg, rgba(194, 231, 255, 0.8), rgba(211, 227, 253, 0.4));
+    border-radius: 3px;
+    padding: 1px 3px;
+    animation: fadeGlow 2.2s forwards ease-out;
+}
+
+@keyframes fadeGlow {
+    0% {
+        background-color: rgba(56, 189, 248, 0.45);
+        color: #0b57d0;
+    }
+    100% {
+        background-color: transparent;
+        color: inherit;
+    }
+}
+
+/* ─── Ink Canvas Overlay ────────────────────────────────────────────── */
+.ink-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 20;
+    pointer-events: auto; /* Active for drawing */
+    touch-action: none;
+    cursor: crosshair;
+    border-radius: 4px;
+}
+
+/* Target insertion point indicator */
+.insertion-indicator {
+    position: absolute;
+    display: none;
+    z-index: 30;
+    pointer-events: none;
+    transition: all 0.15s ease-out;
+}
+
+.indicator-tag {
+    background: #0b57d0;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    display: inline-block;
+    animation: bounce 1.5s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+}
+
+/* ─── Footer ─────────────────────────────────────────────────────────── */
+.footer-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border-top: 1px solid var(--gdocs-border);
+    padding: 8px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: #5f6368;
+    z-index: 100;
+}
+
+.hint-text {
+    color: #444746;
+}
+
+.model-tag {
+    font-family: 'JetBrains Mono', monospace;
+    color: #0b57d0;
+    background: #edf2fa;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 860px) {
+    .page-container {
+        padding: 40px 30px;
+    }
+    .toolbar {
+        overflow-x: auto;
+    }
+}
