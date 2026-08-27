@@ -30,56 +30,261 @@
       z-index: 1;
     }
 
-    /* Overlay Toolbar */
-    .floating-toolbar {
+    /* Cursor indicator on canvas (hidden - position still tracked for text placement) */
+    .text-cursor {
+      display: none;
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+       RIBBON — Microsoft Word style
+       Top bar with brand, then tabs, then tab panels with groups.
+       ───────────────────────────────────────────────────────────── */
+    .ribbon {
       position: absolute;
-      top: 1rem;
-      left: 50%;
-      transform: translateX(-50%);
+      top: 0;
+      left: 0;
+      right: 0;
       z-index: 10;
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(8px);
-      border-radius: 12px;
-      border: 0.5px solid #e0e0d8;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-      padding: 0.75rem 1.25rem;
+      background: #f3f2f1;
+      border-bottom: 1px solid #d1d1cc;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    /* Brand / title bar (Word has a green File tab at the top-left) */
+    .ribbon-brand {
+      display: flex;
+      align-items: center;
+      background: #f3f2f1;
+      padding: 0 12px;
+      height: 28px;
+      border-bottom: 1px solid #e5e5e0;
+    }
+    .ribbon-brand .title {
+      font-size: 12px;
+      color: #61615a;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+    .ribbon-brand .title-sub {
+      font-size: 11px;
+      color: #8a8a83;
+      margin-left: auto;
+    }
+    .ribbon-brand .minimize-btn {
+      margin-left: 12px;
+      font-size: 12px;
+      color: #8a8a83;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    .ribbon-brand .minimize-btn:hover { background: #e8e8e3; }
+
+    /* Tab strip */
+    .ribbon-tabs {
+      display: flex;
+      background: #f3f2f1;
+      padding: 0 8px;
+      height: 30px;
+      align-items: flex-end;
+      gap: 2px;
+      border-bottom: 1px solid #e5e5e0;
+    }
+    .ribbon-tab {
+      padding: 6px 14px 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #61615a;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.12s;
+      letter-spacing: 0.2px;
+    }
+    .ribbon-tab:hover { background: #ebeae5; color: #1a1a1a; }
+    .ribbon-tab.active {
+      background: #ffffff;
+      color: #2563EB;
+      border-bottom-color: #2563EB;
+    }
+
+    /* Tab content panel (the strip with grouped buttons) */
+    .ribbon-panel {
+      display: none;
+      background: #ffffff;
+      padding: 6px 12px 8px 12px;
+      min-height: 92px;
+    }
+    .ribbon-panel.active { display: flex; align-items: stretch; gap: 4px; flex-wrap: wrap; }
+
+    /* A tool group within a panel — has small icon buttons and a label below */
+    .ribbon-group {
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      max-width: 90vw;
-    }
-
-    .controls {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
       align-items: center;
+      padding: 2px 6px 0 6px;
+      border-right: 1px solid #e8e8e3;
+      min-width: 0;
+    }
+    .ribbon-group:last-child { border-right: none; }
+    .ribbon-group-body {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 2px;
+      flex: 1;
+    }
+    .ribbon-group-label {
+      font-size: 11px;
+      color: #61615a;
+      padding: 4px 4px 2px 4px;
+      text-align: center;
+      border-top: 1px solid transparent;
     }
 
-    .controls button {
-      padding: 6px 14px;
-      font-size: 13px;
-      border: 0.5px solid #d0d0c8;
-      background: #fff;
-      border-radius: 8px;
+    /* Small icon button (top row of a group, like Word) */
+    .rib-btn {
+      width: 28px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 3px;
       cursor: pointer;
+      font-size: 13px;
       color: #1a1a1a;
-      transition: background 0.1s;
+      transition: all 0.1s;
+      position: relative;
     }
-    .controls button:hover { background: #f5f5f3; }
-    .controls button:active { transform: scale(0.97); }
+    .rib-btn:hover { background: #e8e8e3; border-color: #d0d0c8; }
+    .rib-btn:active { background: #d8d8d3; }
+    .rib-btn.active {
+      background: #cce4ff;
+      border-color: #92b9ee;
+      color: #1a1a1a;
+    }
+    .rib-btn.active::after {
+      content: "";
+      position: absolute;
+      left: 2px; right: 2px; bottom: -1px;
+      height: 2px;
+      background: #2563EB;
+      border-radius: 1px;
+    }
+    .rib-btn[disabled] { opacity: 0.4; cursor: not-allowed; }
 
-    #status {
-      margin-left: auto;
+    /* Large vertical button (left side of group) — for primary tools */
+    .rib-btn-lg {
+      width: 36px;
+      height: 44px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 11px;
+      color: #1a1a1a;
+      transition: all 0.1s;
+      gap: 2px;
+      padding: 2px;
+    }
+    .rib-btn-lg:hover { background: #e8e8e3; border-color: #d0d0c8; }
+    .rib-btn-lg:active { background: #d8d8d3; }
+    .rib-btn-lg.active {
+      background: #cce4ff;
+      border-color: #92b9ee;
+    }
+    .rib-btn-lg .rib-icon { font-size: 18px; line-height: 1; }
+    .rib-btn-lg .rib-label { font-size: 10px; line-height: 1; color: #444; }
+
+    /* Select dropdown / small input inside ribbon */
+    .rib-select {
+      height: 22px;
       font-size: 12px;
-      color: #888;
+      border: 1px solid #c8c8c0;
+      border-radius: 3px;
+      background: #fff;
+      padding: 0 22px 0 6px;
+      color: #1a1a1a;
+      -webkit-appearance: none;
+      appearance: none;
+      cursor: pointer;
+      background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg width='10' height='6' viewBox='0 0 10 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 6px center;
+      transition: border-color 0.12s;
+    }
+    .rib-select:hover { border-color: #888; }
+    .rib-select:focus { outline: none; border-color: #2563EB; }
+
+    .rib-select.size-select { width: 60px; }
+
+    /* Color swatch inside ribbon */
+    .rib-color {
+      position: relative;
+      width: 22px;
+      height: 22px;
+      border-radius: 3px;
+      border: 1px solid #c8c8c0;
+      cursor: pointer;
+      background: var(--swatch-bg, #1a1a1a);
+      overflow: hidden;
+    }
+    .rib-color:hover { border-color: #888; }
+    .rib-color input[type="color"] {
+      position: absolute;
+      top: -6px; left: -6px;
+      width: 34px; height: 34px;
+      border: none;
+      cursor: pointer;
+      opacity: 0;
+    }
+    .rib-color-label {
+      font-size: 9px;
+      color: #61615a;
+      text-align: center;
+      line-height: 1;
+      margin-top: 1px;
+    }
+
+    /* Color & font group needs vertical layout */
+    .ribbon-group.vertical .ribbon-group-body {
+      flex-direction: column;
+      gap: 2px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Status group sits on the right */
+    .ribbon-group.status {
+      margin-left: auto;
+      border-right: none;
+    }
+    .ribbon-group.status .ribbon-group-body {
+      gap: 6px;
+      padding: 4px 4px;
+    }
+    #status {
       display: flex;
       align-items: center;
       gap: 6px;
+      font-size: 12px;
+      color: #555;
+      font-weight: 500;
     }
-
     #status-dot {
-      width: 7px; height: 7px;
+      width: 8px; height: 8px;
       border-radius: 50%;
       background: #ccc;
       flex-shrink: 0;
@@ -89,21 +294,42 @@
     #status-dot.busy   { background: #EF9F27; }
     #status-dot.error  { background: #E24B4A; }
 
-    .conf-row {
+    /* Slider for stroke width */
+    .rib-slider {
+      width: 100px;
+      margin: 0 6px;
+      accent-color: #2563EB;
+    }
+    .rib-slider-val {
+      font-size: 11px;
+      color: #555;
+      width: 18px;
+      text-align: right;
+    }
+
+    /* Conf row at the bottom of the ribbon */
+    .ribbon-statusbar {
       display: flex;
       align-items: center;
-      gap: 10px;
-      border-top: 0.5px solid #e8e8e0;
-      padding-top: 6px;
-      font-size: 13px;
+      gap: 12px;
+      padding: 6px 12px;
+      background: #f3f2f1;
+      border-top: 1px solid #e5e5e0;
+      font-size: 12px;
       color: #555;
-      min-height: 24px;
+    }
+    .ribbon-statusbar .last-char {
+      font-size: 18px;
+      font-weight: 500;
+      min-width: 18px;
+      color: #1a1a1a;
     }
     .conf-bar-wrap {
       flex: 1; height: 6px;
       border-radius: 3px;
-      background: #eee;
+      background: #e8e8e3;
       overflow: hidden;
+      max-width: 240px;
     }
     .conf-bar {
       height: 100%; border-radius: 3px;
@@ -111,64 +337,505 @@
       width: 0%;
       transition: width 0.25s ease;
     }
+    .conf-label {
+      min-width: 42px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+    .hint {
+      color: #999;
+      font-size: 11px;
+      margin-left: auto;
+    }
 
     kbd {
       display: inline-block;
-      font-size: 11px;
+      font-size: 10px;
       background: #f0f0ec;
-      border: 0.5px solid #d0d0c8;
-      border-radius: 4px;
-      padding: 1px 5px;
+      border: 1px solid #d0d0c8;
+      border-radius: 3px;
+      padding: 0px 4px;
       font-family: inherit;
       color: #555;
     }
+
+    /* Drag-to-move cursor handle (hidden - position still tracked) */
+    .cursor-handle {
+      display: none;
+    }
+
+    /* Selection box drawn on canvas for the selection tool */
+    .selection-readout {
+      position: absolute;
+      background: #1a1a1a;
+      color: #fff;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      pointer-events: none;
+      z-index: 7;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* When the selection tool is active, change the cursor */
+    body.tool-select #board { cursor: default; }
+    body.tool-eraser #board { cursor: cell; }
   </style>
 </head>
-<body>
+<body class="tool-pen">
 
 <canvas id="board"></canvas>
+<div id="cursorHandle" class="cursor-handle"></div>
+<div id="selectionReadout" class="selection-readout" style="display:none;"></div>
 
-<div class="floating-toolbar">
-  <div class="controls">
-    <button id="btn-space">Space</button>
-    <button id="btn-back">Backspace</button>
-    <button id="btn-clear">Clear Board</button>
-    <span id="status"><span id="status-dot"></span><span id="status-label">Connecting…</span></span>
+<!-- ═══════════════ RIBBON ═══════════════ -->
+<div class="ribbon" id="ribbon">
+  <!-- Brand strip -->
+  <div class="ribbon-brand">
+    <span class="title">Handwriting Board</span>
+    <span class="title-sub" id="activeToolLabel">Pen tool</span>
+    <button class="minimize-btn" id="toggleRibbon" title="Collapse / expand ribbon (Ctrl+F1)">▲ Collapse</button>
   </div>
 
-  <div class="conf-row">
-    <span id="last-char" style="font-size:18px;font-weight:500;min-width:18px;"></span>
-    <div class="conf-bar-wrap"><div class="conf-bar" id="conf-bar"></div></div>
-    <span id="conf-label" style="min-width:38px;text-align:right;"></span>
-    <span style="color:#bbb;font-size:12px;">
-      <kbd>Space</kbd> <kbd>Backspace</kbd>
-    </span>
+  <!-- Tabs -->
+  <div class="ribbon-tabs">
+    <button class="ribbon-tab active" data-tab="home">Home</button>
+    <button class="ribbon-tab" data-tab="draw">Draw</button>
+  </div>
+
+  <!-- ── Home tab ── -->
+  <div class="ribbon-panel active" data-panel="home">
+    <!-- Tools group -->
+    <div class="ribbon-group">
+      <div class="ribbon-group-body">
+        <button class="rib-btn-lg active" data-tool="pen" title="Pen tool (P)">
+          <span class="rib-icon">✏️</span><span class="rib-label">Pen</span>
+        </button>
+        <button class="rib-btn-lg" data-tool="select" title="Selection tool (S)">
+          <span class="rib-icon">▢</span><span class="rib-label">Select</span>
+        </button>
+        <button class="rib-btn-lg" data-tool="eraser" title="Eraser (E)">
+          <span class="rib-icon">🩹</span><span class="rib-label">Erase</span>
+        </button>
+      </div>
+      <div class="ribbon-group-label">Tools</div>
+    </div>
+
+    <!-- Clipboard / history group -->
+    <div class="ribbon-group">
+      <div class="ribbon-group-body">
+        <button class="rib-btn-lg" id="btn-undo" title="Undo last action (Ctrl+Z)">
+          <span class="rib-icon">↶</span><span class="rib-label">Undo</span>
+        </button>
+        <button class="rib-btn-lg" id="btn-redo" title="Redo (Ctrl+Y)">
+          <span class="rib-icon">↷</span><span class="rib-label">Redo</span>
+        </button>
+      </div>
+      <div class="ribbon-group-label">History</div>
+    </div>
+
+    <!-- Font group -->
+    <div class="ribbon-group">
+      <div class="ribbon-group-body" style="flex-direction: column; gap: 4px; align-items: stretch;">
+        <select class="rib-select" id="fontFamily" title="Font family" aria-label="Font family">
+          <option value="Courier New, monospace">Courier New</option>
+          <option value="Arial, sans-serif">Arial</option>
+          <option value="Helvetica, sans-serif">Helvetica</option>
+          <option value="Times New Roman, serif">Times New Roman</option>
+          <option value="Georgia, serif">Georgia</option>
+          <option value="Verdana, sans-serif">Verdana</option>
+          <option value="Comic Sans MS, cursive">Comic Sans</option>
+          <option value="Impact, sans-serif">Impact</option>
+          <option value="Trebuchet MS, sans-serif">Trebuchet MS</option>
+        </select>
+        <div style="display:flex; gap:4px; align-items:center;">
+          <select class="rib-select size-select" id="fontSize" title="Font size" aria-label="Font size">
+            <option value="16">16</option>
+            <option value="18">18</option>
+            <option value="20">20</option>
+            <option value="24" selected>24</option>
+            <option value="28">28</option>
+            <option value="32">32</option>
+            <option value="40">40</option>
+            <option value="48">48</option>
+            <option value="56">56</option>
+          </select>
+          <button class="rib-btn" id="btn-bold" title="Bold (Ctrl+B)" style="font-weight:700;">B</button>
+          <button class="rib-btn" id="btn-italic" title="Italic (Ctrl+I)" style="font-style:italic;">I</button>
+          <button class="rib-btn" id="btn-underline" title="Underline (Ctrl+U)" style="text-decoration:underline;">U</button>
+        </div>
+      </div>
+      <div class="ribbon-group-label">Font</div>
+    </div>
+
+    <!-- Color group -->
+    <div class="ribbon-group vertical">
+      <div class="ribbon-group-body">
+        <label class="rib-color" id="colorSwatch" for="fontColor">
+          <input type="color" id="fontColor" value="#1a1a1a" aria-label="Font color" />
+        </label>
+        <div class="rib-color-label">Color</div>
+      </div>
+      <div class="ribbon-group-label">Color</div>
+    </div>
+
+    <!-- Editing group -->
+    <div class="ribbon-group">
+      <div class="ribbon-group-body">
+        <button class="rib-btn-lg" id="btn-space" title="Insert space (Spacebar)">
+          <span class="rib-icon">␣</span><span class="rib-label">Space</span>
+        </button>
+        <button class="rib-btn-lg" id="btn-back" title="Backspace (Backspace)">
+          <span class="rib-icon">⌫</span><span class="rib-label">Delete</span>
+        </button>
+        <button class="rib-btn-lg" id="btn-newline" title="New line (Enter)">
+          <span class="rib-icon">↵</span><span class="rib-label">Line</span>
+        </button>
+        <button class="rib-btn-lg" id="btn-clear" title="Clear all" style="color:#E24B4A;">
+          <span class="rib-icon">✕</span><span class="rib-label">Clear</span>
+        </button>
+      </div>
+      <div class="ribbon-group-label">Edit</div>
+    </div>
+
+    <!-- Status group (right) -->
+    <div class="ribbon-group status">
+      <div class="ribbon-group-body">
+        <div id="status">
+          <span id="status-dot"></span>
+          <span id="status-label">Connecting…</span>
+        </div>
+      </div>
+      <div class="ribbon-group-label">Status</div>
+    </div>
+  </div>
+
+  <!-- ── Draw tab ── -->
+  <div class="ribbon-panel" data-panel="draw">
+    <!-- Stroke group -->
+    <div class="ribbon-group">
+      <div class="ribbon-group-body" style="flex-direction:column; gap:6px; align-items:stretch; justify-content:center;">
+        <div style="display:flex; align-items:center; gap:4px;">
+          <span style="font-size:11px; color:#555; min-width:30px;">Width</span>
+          <input type="range" class="rib-slider" id="strokeWidth" min="1" max="12" value="3" />
+          <span class="rib-slider-val" id="strokeWidthVal">3</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:4px;">
+          <span style="font-size:11px; color:#555; min-width:30px;">Smoot</span>
+          <input type="range" class="rib-slider" id="smoothness" min="0" max="100" value="40" />
+          <span class="rib-slider-val" id="smoothnessVal">40</span>
+        </div>
+      </div>
+      <div class="ribbon-group-label">Stroke</div>
+    </div>
+
+    <!-- Quick colors group -->
+    <div class="ribbon-group">
+      <div class="ribbon-group-body" style="flex-wrap: wrap; max-width: 200px;">
+        <button class="rib-btn" data-quick-color="#1a1a1a" style="background:#1a1a1a;" title="Black"></button>
+        <button class="rib-btn" data-quick-color="#E24B4A" style="background:#E24B4a;" title="Red"></button>
+        <button class="rib-btn" data-quick-color="#EF9F27" style="background:#EF9F27;" title="Orange"></button>
+        <button class="rib-btn" data-quick-color="#1D9E75" style="background:#1D9E75;" title="Green"></button>
+        <button class="rib-btn" data-quick-color="#2563EB" style="background:#2563EB;" title="Blue"></button>
+        <button class="rib-btn" data-quick-color="#7C3AED" style="background:#7C3AED;" title="Purple"></button>
+        <button class="rib-btn" data-quick-color="#ffffff" style="background:#ffffff; border-color:#c8c8c0;" title="White"></button>
+        <button class="rib-btn" data-quick-color="#888888" style="background:#888888;" title="Gray"></button>
+      </div>
+      <div class="ribbon-group-label">Quick Colors</div>
+    </div>
+
+    <!-- Recognition options group -->
+    <div class="ribbon-group">
+      <div class="ribbon-group-body" style="flex-direction:column; gap:4px; align-items:stretch;">
+        <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:#444;">
+          <input type="checkbox" id="autoRecognize" checked />
+          Auto-recognize
+        </label>
+        <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:#444;">
+          <input type="checkbox" id="showStrokeHint" checked />
+          Show stroke preview
+        </label>
+        <label style="display:flex; align-items:center; gap:6px; font-size:12px; color:#444;">
+          Delay (ms):
+          <input class="rib-select" type="number" id="inferDelay" min="100" max="3000" step="100" value="600" style="width:64px;" />
+        </label>
+      </div>
+      <div class="ribbon-group-label">Recognition</div>
+    </div>
+
+    <!-- Capture group -->
+    <div class="ribbon-group">
+      <div class="ribbon-group-body">
+        <button class="rib-btn-lg" id="btn-snapshot" title="Save canvas as PNG">
+          <span class="rib-icon">📷</span><span class="rib-label">Save</span>
+        </button>
+        <button class="rib-btn-lg" id="btn-recognize" title="Recognize now (Enter)">
+          <span class="rib-icon">🔍</span><span class="rib-label">Recognize</span>
+        </button>
+      </div>
+      <div class="ribbon-group-label">Actions</div>
+    </div>
   </div>
 </div>
 
 <script>
 (function () {
   const API = '/predict';
-  const DELAY = 600;
-  const FS = 30, CW = 19;
+  let DELAY = 600;
 
   const canvas = document.getElementById('board');
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
 
+  // ── Ribbon state ─────────────────────────────────────────────
+  let activeTab = 'home';
+  let activeTool = 'pen';
+  let STROKE_WIDTH = 3;
+  let SMOOTHNESS = 40;
+  let BOLD = false, ITALIC = false, UNDERLINE = false;
+  let ALIGN = 'left';
+  let SHOW_GRID = false, DARK_MODE = false, WORD_WRAP = true;
+  let AUTO_RECOG = true, SHOW_STROKE_HINT = true;
+  let LINE_GAP = 8, CHAR_GAP = 0;
+  let ribbonCollapsed = false;
+
+  // Dynamic font settings
+  let FS = parseInt(document.getElementById('fontSize').value);
+  let CW = Math.round(FS * 0.63);
+  let FONT_FAMILY = document.getElementById('fontFamily').value;
+  let FONT_COLOR = document.getElementById('fontColor').value;
+
+  // ── Tab switching ────────────────────────────────────────────
+  document.querySelectorAll('.ribbon-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.dataset.tab;
+      activeTab = target;
+      document.querySelectorAll('.ribbon-tab').forEach(t => t.classList.toggle('active', t === tab));
+      document.querySelectorAll('.ribbon-panel').forEach(p => {
+        p.classList.toggle('active', p.dataset.panel === target);
+      });
+    });
+  });
+
+  // ── Tool switching ───────────────────────────────────────────
+  function setTool(tool) {
+    activeTool = tool;
+    document.body.classList.remove('tool-pen', 'tool-select', 'tool-eraser');
+    document.body.classList.add('tool-' + tool);
+    document.querySelectorAll('[data-tool]').forEach(b => {
+      b.classList.toggle('active', b.dataset.tool === tool);
+    });
+    const labels = { pen: 'Pen tool', select: 'Selection tool', eraser: 'Eraser tool' };
+    document.getElementById('activeToolLabel').textContent = labels[tool] || tool;
+  }
+  document.querySelectorAll('[data-tool]').forEach(b => {
+    b.addEventListener('click', () => setTool(b.dataset.tool));
+  });
+
+  // ── Alignment ────────────────────────────────────────────────
+  document.querySelectorAll('[data-align]').forEach(b => {
+    b.addEventListener('click', () => {
+      ALIGN = b.dataset.align;
+      document.querySelectorAll('[data-align]').forEach(x =>
+        x.classList.toggle('active', x.dataset.align === ALIGN));
+      render();
+    });
+  });
+
+  // ── Font controls ────────────────────────────────────────────
+  document.getElementById('fontSize').addEventListener('change', e => {
+    FS = parseInt(e.target.value);
+    CW = Math.round(FS * 0.63) + CHAR_GAP;
+    render();
+  });
+  document.getElementById('fontFamily').addEventListener('change', e => {
+    FONT_FAMILY = e.target.value;
+    render();
+  });
+  document.getElementById('fontColor').addEventListener('input', e => {
+    FONT_COLOR = e.target.value;
+    document.getElementById('colorSwatch').style.setProperty('--swatch-bg', FONT_COLOR);
+    render();
+  });
+
+  // Quick color swatches
+  document.querySelectorAll('[data-quick-color]').forEach(b => {
+    b.addEventListener('click', () => {
+      FONT_COLOR = b.dataset.quickColor;
+      document.getElementById('fontColor').value = FONT_COLOR;
+      document.getElementById('colorSwatch').style.setProperty('--swatch-bg', FONT_COLOR);
+      render();
+    });
+  });
+
+  // Bold/Italic/Underline
+  function toggleFmt(btn, prop) {
+    btn.addEventListener('click', () => {
+      if (prop === 'bold') BOLD = !BOLD;
+      if (prop === 'italic') ITALIC = !ITALIC;
+      if (prop === 'underline') UNDERLINE = !UNDERLINE;
+      btn.classList.toggle('active', (prop === 'bold' && BOLD) || (prop === 'italic' && ITALIC) || (prop === 'underline' && UNDERLINE));
+      render();
+    });
+  }
+  toggleFmt(document.getElementById('btn-bold'), 'bold');
+  toggleFmt(document.getElementById('btn-italic'), 'italic');
+  toggleFmt(document.getElementById('btn-underline'), 'underline');
+
+  // Stroke controls
+  const sw = document.getElementById('strokeWidth');
+  const swv = document.getElementById('strokeWidthVal');
+  sw.addEventListener('input', () => {
+    STROKE_WIDTH = parseInt(sw.value);
+    swv.textContent = STROKE_WIDTH;
+    render();
+  });
+  const smo = document.getElementById('smoothness');
+  const smov = document.getElementById('smoothnessVal');
+  smo.addEventListener('input', () => {
+    SMOOTHNESS = parseInt(smo.value);
+    smov.textContent = SMOOTHNESS;
+  });
+
+  // Recognition options
+  document.getElementById('autoRecognize').addEventListener('change', e => {
+    AUTO_RECOG = e.target.checked;
+  });
+  document.getElementById('showStrokeHint').addEventListener('change', e => {
+    SHOW_STROKE_HINT = e.target.checked;
+    render();
+  });
+  document.getElementById('inferDelay').addEventListener('change', e => {
+    DELAY = Math.max(100, parseInt(e.target.value) || 600);
+  });
+
+  // Cursor X/Y inputs removed with cursor controls
+  function syncCursorInputs() {
+    // No-op: cursor position inputs removed from UI
+  }
+
+  // Ribbon collapse
+  const ribbon = document.getElementById('ribbon');
+  const toggleBtn = document.getElementById('toggleRibbon');
+  toggleBtn.addEventListener('click', () => {
+    ribbonCollapsed = !ribbonCollapsed;
+    const tabs = ribbon.querySelector('.ribbon-tabs');
+    const panels = ribbon.querySelectorAll('.ribbon-panel');
+    tabs.style.display = ribbonCollapsed ? 'none' : '';
+    panels.forEach(p => p.style.display = ribbonCollapsed ? 'none' : '');
+    toggleBtn.textContent = ribbonCollapsed ? '▼ Expand' : '▲ Collapse';
+    resize();
+  });
+
+  // Snapshot
+  document.getElementById('btn-snapshot').addEventListener('click', () => {
+    const a = document.createElement('a');
+    a.download = 'handwriting-' + Date.now() + '.png';
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  });
+  document.getElementById('btn-recognize').addEventListener('click', () => {
+    if (timer) { clearTimeout(timer); timer = null; }
+    runInfer();
+  });
+
+  // ── Canvas / drawing state ───────────────────────────────────
   function resize() {
     canvas.width = window.innerWidth * dpr;
     canvas.height = window.innerHeight * dpr;
-    ctx.scale(dpr, dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     render();
   }
   window.addEventListener('resize', resize);
 
-  // Array of text elements placed across the screen: { text, x, y }
+  // Cursor state
+  let cursorPos = { x: 100, y: 100 };
   let placedTexts = [];
-  let currentPos = null; // Stores { x, y } where current writing originated
-
   let strokes = [], cur = null, drawing = false, timer = null;
+
+  // History (undo/redo)
+  const history = [];
+  const redoStack = [];
+  function snapshot() {
+    history.push({
+      placedTexts: JSON.parse(JSON.stringify(placedTexts)),
+      cursorPos: { ...cursorPos },
+      strokes: JSON.parse(JSON.stringify(strokes)),
+      cur: cur ? JSON.parse(JSON.stringify(cur)) : null,
+    });
+    if (history.length > 100) history.shift();
+    redoStack.length = 0;
+    updateHistoryButtons();
+  }
+  function restoreState(s) {
+    placedTexts = JSON.parse(JSON.stringify(s.placedTexts));
+    cursorPos = { ...s.cursorPos };
+    strokes = JSON.parse(JSON.stringify(s.strokes));
+    cur = s.cur ? JSON.parse(JSON.stringify(s.cur)) : null;
+    syncCursorInputs();
+    updateCursorHandlePos();
+    render();
+  }
+  function updateHistoryButtons() {
+    document.getElementById('btn-undo').disabled = history.length === 0;
+    document.getElementById('btn-redo').disabled = redoStack.length === 0;
+  }
+  document.getElementById('btn-undo').addEventListener('click', () => {
+    if (history.length === 0) return;
+    redoStack.push({
+      placedTexts: JSON.parse(JSON.stringify(placedTexts)),
+      cursorPos: { ...cursorPos },
+      strokes: JSON.parse(JSON.stringify(strokes)),
+      cur: cur ? JSON.parse(JSON.stringify(cur)) : null,
+    });
+    restoreState(history.pop());
+    updateHistoryButtons();
+  });
+  document.getElementById('btn-redo').addEventListener('click', () => {
+    if (redoStack.length === 0) return;
+    history.push({
+      placedTexts: JSON.parse(JSON.stringify(placedTexts)),
+      cursorPos: { ...cursorPos },
+      strokes: JSON.parse(JSON.stringify(strokes)),
+      cur: cur ? JSON.parse(JSON.stringify(cur)) : null,
+    });
+    restoreState(redoStack.pop());
+    updateHistoryButtons();
+  });
+
+  // Cursor handle dragging
+  const cursorHandle = document.getElementById('cursorHandle');
+  let draggingCursor = false;
+  function updateCursorHandlePos() {
+    cursorHandle.style.left = cursorPos.x + 'px';
+    cursorHandle.style.top = cursorPos.y + (FS * 0.5) + 'px';
+  }
+  function getXY(e) {
+    const r = canvas.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
+  cursorHandle.addEventListener('pointerdown', e => {
+    e.preventDefault(); e.stopPropagation();
+    draggingCursor = true;
+    cursorHandle.setPointerCapture(e.pointerId);
+  });
+  cursorHandle.addEventListener('pointermove', e => {
+    if (!draggingCursor) return;
+    const pt = getXY(e);
+    cursorPos.x = Math.max(0, Math.min(window.innerWidth, pt.x));
+    cursorPos.y = Math.max(0, Math.min(window.innerHeight - FS, pt.y));
+    updateCursorHandlePos();
+    syncCursorInputs();
+  });
+  cursorHandle.addEventListener('pointerup', () => { draggingCursor = false; });
+
+  // Selection tool state
+  let selectionBox = null; // { x1, y1, x2, y2 }
+  const selectionReadout = document.getElementById('selectionReadout');
+  let selecting = false;
+
+  // Eraser
+  let erasing = false;
 
   function W() { return window.innerWidth; }
   function H() { return window.innerHeight; }
@@ -178,96 +845,196 @@
     document.getElementById('status-label').textContent = text;
   }
 
+  function fontString() {
+    const style = ITALIC ? 'italic ' : '';
+    const weight = BOLD ? '700 ' : '400 ';
+    return `${style}${weight}${FS}px ${FONT_FAMILY}`;
+  }
+
+  function drawGrid() {
+    if (!SHOW_GRID) return;
+    ctx.save();
+    ctx.strokeStyle = '#e8e8e3';
+    ctx.lineWidth = 0.5;
+    const step = 24;
+    for (let x = 0; x < W(); x += step) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H()); ctx.stroke();
+    }
+    for (let y = 0; y < H(); y += step) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W(), y); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawStrokesOn(ctx2) {
+    const all = [...strokes, ...(cur ? [cur] : [])];
+    ctx2.strokeStyle = FONT_COLOR;
+    ctx2.lineJoin = 'round';
+    ctx2.lineCap = 'round';
+    ctx2.lineWidth = STROKE_WIDTH;
+    all.forEach(s => {
+      if (s.length < 2) return;
+      const pts = SMOOTHNESS > 0 ? smoothStroke(s) : s;
+      ctx2.beginPath();
+      ctx2.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length; i++) ctx2.lineTo(pts[i].x, pts[i].y);
+      ctx2.stroke();
+    });
+  }
+  function smoothStroke(pts) {
+    if (pts.length < 3) return pts;
+    const out = [pts[0]];
+    const k = 1 - SMOOTHNESS / 100;
+    for (let i = 1; i < pts.length - 1; i++) {
+      const a = pts[i], b = pts[i + 1];
+      out.push({ x: a.x + (b.x - a.x) * k * 0.5, y: a.y + (b.y - a.y) * k * 0.5 });
+    }
+    out.push(pts[pts.length - 1]);
+    return out;
+  }
+
+  function drawSelectionBox() {
+    if (!selectionBox) return;
+    ctx.save();
+    ctx.strokeStyle = '#2563EB';
+    ctx.fillStyle = 'rgba(37, 99, 235, 0.08)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    const x = Math.min(selectionBox.x1, selectionBox.x2);
+    const y = Math.min(selectionBox.y1, selectionBox.y2);
+    const w = Math.abs(selectionBox.x2 - selectionBox.x1);
+    const h = Math.abs(selectionBox.y2 - selectionBox.y1);
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeRect(x, y, w, h);
+    ctx.restore();
+    const wpx = Math.round(w), hpx = Math.round(h);
+    selectionReadout.textContent = `${wpx} × ${hpx}`;
+    selectionReadout.style.left = (x + w + 8) + 'px';
+    selectionReadout.style.top  = (y) + 'px';
+    selectionReadout.style.display = 'block';
+  }
+  function clearSelectionReadout() {
+    selectionBox = null;
+    selectionReadout.style.display = 'none';
+  }
+
   function render() {
     const w = W(), h = H();
     ctx.clearRect(0, 0, w, h);
-
-    // Render all confirmed text at their relative positions
-    ctx.font = `${FS}px "Courier New", monospace`;
-    ctx.fillStyle = '#1a1a1a';
+    drawGrid();
+    // Render all confirmed text at their cursor positions
+    ctx.font = fontString();
+    ctx.fillStyle = FONT_COLOR;
     ctx.textBaseline = 'top';
     placedTexts.forEach(item => {
       ctx.fillText(item.text, item.x, item.y);
-    });
-
-    // Render strokes currently being drawn
-    if (strokes.length || cur) {
-      drawStrokes();
-    }
-  }
-
-  function drawStrokes() {
-    const all = [...strokes, ...(cur ? [cur] : [])];
-    ctx.strokeStyle = '#2563EB';
-    ctx.lineJoin = 'round'; 
-    ctx.lineCap = 'round'; 
-    ctx.lineWidth = 3;
-
-    all.forEach(s => {
-      if (s.length < 2) return;
-      ctx.beginPath();
-      ctx.moveTo(s[0].x, s[0].y);
-      for (let i = 1; i < s.length; i++) {
-        ctx.lineTo(s[i].x, s[i].y);
+      if (UNDERLINE) {
+        const tw = ctx.measureText(item.text).width;
+        ctx.fillRect(item.x, item.y + FS + 1, tw, Math.max(1, FS / 16));
       }
-      ctx.stroke();
     });
+    if (SHOW_STROKE_HINT && (strokes.length || cur)) drawStrokesOn(ctx);
+    drawSelectionBox();
+    updateCursorHandlePos();
   }
 
-  function getXY(e) {
-    const r = canvas.getBoundingClientRect();
-    return { x: e.clientX - r.left, y: e.clientY - r.top };
-  }
-
+  // ── Canvas pointer events ────────────────────────────────────
   canvas.addEventListener('pointerdown', e => {
-    e.preventDefault(); 
+    if (draggingCursor) return;
+    e.preventDefault();
     canvas.setPointerCapture(e.pointerId);
     if (timer) { clearTimeout(timer); timer = null; }
-    
+
     const pt = getXY(e);
-    // Track cursor location on first stroke of a session
-    if (!strokes.length) {
-      currentPos = { x: pt.x, y: pt.y };
+
+    if (activeTool === 'eraser') {
+      erasing = true;
+      eraseAt(pt);
+      setStatus('busy', 'Erasing…');
+      snapshot();
+      render();
+      return;
     }
-    
-    drawing = true; 
+
+    if (activeTool === 'select') {
+      selecting = true;
+      selectionBox = { x1: pt.x, y1: pt.y, x2: pt.x, y2: pt.y };
+      render();
+      return;
+    }
+
+    // pen
+    snapshot();
+    drawing = true;
     cur = [pt];
-    setStatus('busy', 'Drawing…'); 
+    setStatus('busy', 'Drawing…');
     render();
   });
 
   canvas.addEventListener('pointermove', e => {
-    if (!drawing) return; 
-    cur.push(getXY(e)); 
-    render();
-  });
-
-  canvas.addEventListener('pointerup', e => {
-    if (!drawing) return; 
-    drawing = false;
-    if (cur?.length) strokes.push(cur);
-    cur = null; 
-    render();
-    setStatus('busy', 'Waiting…');
-    timer = setTimeout(runInfer, DELAY);
-  });
-
-  canvas.addEventListener('pointercancel', e => {
-    if (drawing) { 
-      drawing = false; 
-      if (cur?.length) strokes.push(cur); 
-      cur = null; 
-      render(); 
+    const pt = getXY(e);
+    if (drawing) {
+      cur.push(pt);
+      render();
+    } else if (selecting) {
+      selectionBox.x2 = pt.x;
+      selectionBox.y2 = pt.y;
+      render();
+    } else if (erasing) {
+      eraseAt(pt);
+      render();
     }
   });
 
+  canvas.addEventListener('pointerup', e => {
+    if (drawing) {
+      drawing = false;
+      if (cur?.length) strokes.push(cur);
+      cur = null;
+      render();
+      setStatus('busy', 'Waiting…');
+      if (AUTO_RECOG) timer = setTimeout(runInfer, DELAY);
+    } else if (selecting) {
+      selecting = false;
+      const pt = getXY(e);
+      selectionBox.x2 = pt.x;
+      selectionBox.y2 = pt.y;
+      render();
+    } else if (erasing) {
+      erasing = false;
+      setStatus('ready', 'Draw anywhere on the board');
+    }
+  });
+
+  canvas.addEventListener('pointercancel', () => {
+    if (drawing) { drawing = false; if (cur?.length) strokes.push(cur); cur = null; }
+    if (selecting) selecting = false;
+    if (erasing) erasing = false;
+    render();
+  });
+
+  // Erase: remove strokes within radius
+  function eraseAt(pt) {
+    const r = 14;
+    strokes = strokes.filter(s =>
+      !s.some(p => Math.hypot(p.x - pt.x, p.y - pt.y) < r)
+    );
+    placedTexts = placedTexts.filter(it => {
+      if (it.x <= pt.x && it.y <= pt.y && pt.x <= it.x + FS * it.text.length && pt.y <= it.y + FS) {
+        return Math.random() > 0.5; // remove roughly half if intersecting
+      }
+      return true;
+    });
+  }
+
+  // ── 28×28 rasterization ──────────────────────────────────────
   function rasterize28() {
     const off = document.createElement('canvas');
     off.width = 28; off.height = 28;
     const oc = off.getContext('2d');
     oc.fillStyle = '#000'; oc.fillRect(0, 0, 28, 28);
     if (!strokes.length) return off;
-    
+
     const pts = strokes.flat();
     const mnX = Math.min(...pts.map(p => p.x));
     const mxX = Math.max(...pts.map(p => p.x));
@@ -277,7 +1044,7 @@
     const scale = (28 - pad * 2) / Math.max(sw, sh);
     const ox = pad + (28 - pad * 2 - sw * scale) / 2;
     const oy = pad + (28 - pad * 2 - sh * scale) / 2;
-    
+
     oc.strokeStyle = '#fff'; oc.lineJoin = 'round'; oc.lineCap = 'round';
     oc.lineWidth = Math.max(1.5, 28 * 0.09);
     strokes.forEach(s => {
@@ -288,19 +1055,24 @@
         oc.lineTo(ox + (s[i].x - mnX) * scale, oy + (s[i].y - mnY) * scale);
       oc.stroke();
     });
-
-    // NOTE: orientation correction (rotate/flip) intentionally lives ONLY on the
-    // backend now (see main.py). Do not re-add a transform here — having it in
-    // two places caused the compounding-transform bug from Phase 1.
     return off;
   }
 
   async function runInfer() {
     if (!strokes.length) return;
     setStatus('busy', 'Recognising…');
+
+    // Calculate bounding box center of the drawn strokes
+    const pts = strokes.flat();
+    const mnX = Math.min(...pts.map(p => p.x));
+    const mxX = Math.max(...pts.map(p => p.x));
+    const mnY = Math.min(...pts.map(p => p.y));
+    const mxY = Math.max(...pts.map(p => p.y));
+    const centerX = (mnX + mxX) / 2;
+    const centerY = (mnY + mxY) / 2;
+
     const img28 = rasterize28();
     const b64 = img28.toDataURL('image/png');
-
     try {
       const res = await fetch(API, {
         method: 'POST',
@@ -309,12 +1081,11 @@
       });
       if (!res.ok) throw new Error(`Server ${res.status}`);
       const data = await res.json();
+      // Status bar elements removed from UI
 
-      document.getElementById('last-char').textContent = data.character;
-      document.getElementById('conf-bar').style.width = data.confidence + '%';
-      document.getElementById('conf-label').textContent = data.confidence.toFixed(1) + '%';
+      // Place character at the drawing location, not cursor position
+      addCharAtPosition(data.character, centerX - FS * 0.3, centerY - FS * 0.5);
 
-      addChar(data.character);
       strokes = []; cur = null;
       setStatus('ready', `Got "${data.character}" — draw anywhere`);
     } catch (err) {
@@ -324,69 +1095,145 @@
     render();
   }
 
-  function addChar(ch) {
-    if (!currentPos) return;
+  function addCharAtPosition(ch, x, y) {
+    // Add character at a specific position (for recognized strokes)
+    if (ch === ' ' || ch === '\n') return; // Don't place spaces/newlines from recognition
+    placedTexts.push({ text: ch, x: x, y: y });
+    // Move cursor to the right of the newly placed character
+    cursorPos.x = x + CW;
+    cursorPos.y = y;
+    syncCursorInputs();
+  }
 
-    // Append to existing text block if typing in sequence, else create a new text entry at cursor position
+  function addChar(ch) {
+    // Add character at the current cursor position (for keyboard/button input)
+    if (ch === ' ') { addSpace(); return; }
+    if (ch === '\n') { addNewline(); return; }
     const lastItem = placedTexts[placedTexts.length - 1];
-    if (lastItem && Math.abs(lastItem.y - currentPos.y) < FS) {
+    if (lastItem && Math.abs(lastItem.y - cursorPos.y) < FS * 1.2) {
       lastItem.text += ch;
-      // Advance cursor horizontal position for following characters
-      currentPos.x += CW;
     } else {
-      placedTexts.push({ text: ch, x: currentPos.x, y: currentPos.y });
-      currentPos.x += CW;
+      placedTexts.push({ text: ch, x: cursorPos.x, y: cursorPos.y });
     }
+    cursorPos.x += CW;
+    if (WORD_WRAP && cursorPos.x > window.innerWidth - CW) addNewline();
+    syncCursorInputs();
+  }
+
+  function addNewline() {
+    cursorPos.x = 100;
+    cursorPos.y += FS + LINE_GAP;
+    syncCursorInputs();
   }
 
   function backspace() {
     if (strokes.length || cur) { strokes = []; cur = null; render(); return; }
     if (placedTexts.length) {
       const lastItem = placedTexts[placedTexts.length - 1];
-      lastItem.text = lastItem.text.slice(0, -1);
-      if (lastItem.text.length === 0) {
+      if (lastItem.text.length > 1) {
+        lastItem.text = lastItem.text.slice(0, -1);
+        cursorPos.x = Math.max(0, cursorPos.x - CW);
+      } else {
         placedTexts.pop();
+        // restore previous y if we just popped a one-char entry
+        if (placedTexts.length) {
+          const prev = placedTexts[placedTexts.length - 1];
+          cursorPos.x = prev.x + CW * prev.text.length;
+          cursorPos.y = prev.y;
+        } else {
+          cursorPos.x = Math.max(0, cursorPos.x - CW);
+        }
       }
     }
+    syncCursorInputs();
     render();
   }
 
-  function addSpace() { 
-    if (placedTexts.length && currentPos) {
-      addChar(' '); 
-    }
-    render(); 
-  }
+  function addSpace() { addChar(' '); render(); }
 
   function clearAll() {
     if (timer) { clearTimeout(timer); timer = null; }
+    snapshot();
     placedTexts = [];
-    strokes = []; 
+    strokes = [];
     cur = null;
-    currentPos = null;
-    document.getElementById('last-char').textContent = '';
-    document.getElementById('conf-bar').style.width = '0%';
-    document.getElementById('conf-label').textContent = '';
+    selectionBox = null;
+    cursorPos = { x: 100, y: 100 };
+    // Status bar elements removed from UI
+    clearSelectionReadout();
     setStatus('ready', 'Draw anywhere on the board');
+    syncCursorInputs();
     render();
   }
 
   document.getElementById('btn-space').onclick = addSpace;
   document.getElementById('btn-back').onclick = backspace;
+  document.getElementById('btn-newline').onclick = addNewline;
   document.getElementById('btn-clear').onclick = clearAll;
 
+  // ── Keyboard shortcuts ──────────────────────────────────────
   document.addEventListener('keydown', e => {
-    if (e.key === ' ') { e.preventDefault(); addSpace(); }
+    const tag = e.target.tagName;
+    const inField = tag === 'SELECT' || tag === 'INPUT' || tag === 'TEXTAREA';
+    if (inField) return;
+
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+      e.preventDefault();
+      if (e.shiftKey) document.getElementById('btn-redo').click();
+      else document.getElementById('btn-undo').click();
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+      e.preventDefault(); document.getElementById('btn-redo').click(); return;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+      e.preventDefault(); document.getElementById('btn-bold').click(); return;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'i') {
+      e.preventDefault(); document.getElementById('btn-italic').click(); return;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'u') {
+      e.preventDefault(); document.getElementById('btn-underline').click(); return;
+    }
+    if (e.key === 'F1' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault(); toggleBtn.click(); return;
+    }
+    if (e.key === 'Escape') { setTool('pen'); clearSelectionReadout(); return; }
+
+    if (e.key === 'p' || e.key === 'P') setTool('pen');
+    else if (e.key === 's' || e.key === 'S') setTool('select');
+    else if (e.key === 'e' || e.key === 'E') setTool('eraser');
+    else if (e.key === ' ') { e.preventDefault(); addSpace(); }
     else if (e.key === 'Backspace') { e.preventDefault(); backspace(); }
+    else if (e.key === 'Enter') { e.preventDefault(); addNewline(); }
   });
 
-  // Check backend health on startup
+  // Click outside selection to deselect
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') clearSelectionReadout();
+  });
+  canvas.addEventListener('click', e => {
+    if (!selectionBox) return;
+    const pt = getXY(e);
+    const x = Math.min(selectionBox.x1, selectionBox.x2);
+    const y = Math.min(selectionBox.y1, selectionBox.y2);
+    const w = Math.abs(selectionBox.x2 - selectionBox.x1);
+    const h = Math.abs(selectionBox.y2 - selectionBox.y1);
+    if (!(pt.x >= x && pt.x <= x + w && pt.y >= y && pt.y <= y + h)) {
+      clearSelectionReadout();
+    }
+  });
+
+  // Health check + initial render
   fetch('/health')
     .then(r => r.json())
-    .then(() => { setStatus('ready', 'Draw anywhere on the board'); resize(); })
+    .then(() => { setStatus('ready', 'Drag the cursor, then draw'); resize(); })
     .catch(() => setStatus('error', 'Backend not reachable'));
 
+  syncCursorInputs();
+  updateHistoryButtons();
   resize();
+  updateCursorHandlePos();
 })();
 </script>
 </body>
