@@ -16,7 +16,7 @@ from pydantic import BaseModel
 import json
 
 # ── Change this to your model path ───────────────────────────────────────────
-MODEL_PATH = "letter_digit_symbol_recognizer_final.pth"
+MODEL_PATH = "model_final.pth"
 LABELS_PATH = "labels.json"
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -53,21 +53,39 @@ CAPTURE_DIR = "debug_captures"
 
 
 class LetterNet(nn.Module):
-    def __init__(self, num_classes=26):
+    """Improved deep architecture for 62-class case-sensitive recognition.
+
+    Upgraded from the original 3-block model to handle the increased complexity
+    of distinguishing uppercase, lowercase, and digits (62 classes vs 47).
+
+    Key improvements:
+    - 4 conv blocks instead of 3 (deeper feature extraction)
+    - Doubled channel sizes: 64→128→256 (more representational capacity)
+    - Deeper classifier with BatchNorm and higher dropout
+    - Better suited for confusing pairs like O/o, I/l, 0/O, etc.
+    """
+    def __init__(self, num_classes=62):
         super().__init__()
         self.features = nn.Sequential(
-            nn.Conv2d(1, 32, 3, padding=1), nn.BatchNorm2d(32), nn.ReLU(),
-            nn.Conv2d(32, 32, 3, padding=1), nn.ReLU(),
+            # Block 1: 28x28 -> 14x14
+            nn.Conv2d(1, 64, 3, padding=1), nn.BatchNorm2d(64), nn.ReLU(),
+            nn.Conv2d(64, 64, 3, padding=1), nn.BatchNorm2d(64), nn.ReLU(),
             nn.MaxPool2d(2), nn.Dropout2d(0.1),
-            nn.Conv2d(32, 64, 3, padding=1), nn.BatchNorm2d(64), nn.ReLU(),
-            nn.Conv2d(64, 64, 3, padding=1), nn.ReLU(),
-            nn.MaxPool2d(2), nn.Dropout2d(0.1),
-            nn.Conv2d(64, 128, 3, padding=1), nn.ReLU(),
-            nn.AdaptiveAvgPool2d(3),
+
+            # Block 2: 14x14 -> 7x7
+            nn.Conv2d(64, 128, 3, padding=1), nn.BatchNorm2d(128), nn.ReLU(),
+            nn.Conv2d(128, 128, 3, padding=1), nn.BatchNorm2d(128), nn.ReLU(),
+            nn.MaxPool2d(2), nn.Dropout2d(0.15),
+
+            # Block 3: 7x7 -> 3x3
+            nn.Conv2d(128, 256, 3, padding=1), nn.BatchNorm2d(256), nn.ReLU(),
+            nn.Conv2d(256, 256, 3, padding=1), nn.BatchNorm2d(256), nn.ReLU(),
+            nn.AvgPool2d(kernel_size=3, stride=2),  # 7x7 -> 3x3, MPS-compatible
         )
         self.classifier = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(128 * 9, 256), nn.ReLU(), nn.Dropout(0.3),
+            nn.Linear(256 * 9, 512), nn.BatchNorm1d(512), nn.ReLU(), nn.Dropout(0.4),
+            nn.Linear(512, 256), nn.BatchNorm1d(256), nn.ReLU(), nn.Dropout(0.3),
             nn.Linear(256, num_classes),
         )
 
